@@ -1,4 +1,6 @@
 import { Component } from '@angular/core';
+import { GanttData } from './gantt/gantt.interface';
+import { GANTT_DATA_MOCK } from './gantt/gantt.mock';
 
 @Component({
   selector: 'app-root',
@@ -6,5 +8,9 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'dhtml-poc';
+  ganttData: GanttData = GANTT_DATA_MOCK;
+
+  ganttdataUpdated(event) {
+    console.log(event);
+  }
 }
