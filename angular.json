@@ -123,6 +123,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "dhtml-poc"
+    }
+  },
+  "defaultProject": "dhtml-poc",
+  "cli": {
+    "analytics": false
+  }
 }

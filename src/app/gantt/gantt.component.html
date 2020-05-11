@@ -1,2 +1,9 @@
-
 <div #gantt style='width:100%; height:100%;'></div>
+
+<button (click)="toggleZoomMode()">
+    <span *ngIf="!zoom; else elseBlock">Zoom To Fit</span>
+    <ng-template #elseBlock>
+        Resotre default scale
+    </ng-template>
+    
+</button>
