@@ -6,6 +6,7 @@ import {
 import { GanttModule } from './gantt.module';
 import { GANTT_DATA_MOCK } from './gantt.mock';
 import { GanttComponent } from './gantt.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 const story = storiesOf('Gannt Charts', module).addDecorator(
     withKnobs
@@ -14,7 +15,8 @@ const story = storiesOf('Gannt Charts', module).addDecorator(
 const template = `
 <app-gantt
     [data]="ganttData"
-    (dataUpdated)="ganttdataUpdated($event)">
+    (dataUpdated)="ganttdataUpdated($event)"
+    (ganttScaleChanged)="ganttScaleChanged($event)">
 </app-gantt>
 `;
 
@@ -33,6 +35,7 @@ const note = `
   --- | --- | --- | ---
   [data] | GanttData | Gantt Data | []
   (dataUpdated) | GanttRow | Gantt Event Updated | N/A
+  (ganttScaleChanged) | GanttScaleEvent | Gantt Scale Changed | N/A
 `;
 
 
@@ -46,7 +49,8 @@ story.add(
             data: GANTT_DATA_MOCK
         },
         moduleMetadata: {
-            imports: [GanttModule],
+            imports: [GanttModule, TranslateModule.forRoot()],
+            providers: [TranslateService, Document]
         },
     }),
     { notes: { markdown: note } }

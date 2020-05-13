@@ -1,3 +1,4 @@
-<app-gantt [data]="ganttData | async" (dataUpdated)="ganttdataUpdated($event)"></app-gantt>
+<app-gantt [data]="ganttData$ | async" (dataUpdated)="ganttdataUpdated($event)"
+(ganttScaleChanged)="ganttScaleChanged($event)"></app-gantt>
 
 <button (click)="addTask()">Click me</button>

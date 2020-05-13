@@ -11,4 +11,10 @@ export interface GanttRow {
     progress?: number;
     open?: boolean;
     parent?: number;
+    color?: string;
+}
+
+export interface GanttScaleEvent {
+    minDate: Date | string;
+    maxDate: Date | string;
 }

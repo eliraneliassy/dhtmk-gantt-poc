@@ -1,8 +1,8 @@
 import {
-  Component, OnInit, Input, Output, EventEmitter, AfterViewInit,
-  ElementRef, ViewChild, ChangeDetectionStrategy, OnChanges, SimpleChanges
+  Component, Input, Output, EventEmitter, AfterViewInit,
+  ElementRef, ViewChild, ChangeDetectionStrategy, OnChanges, SimpleChanges, Inject
 } from '@angular/core';
-import { GanttData, GanttRow } from './gantt.interface';
+import { GanttData, GanttRow, GanttScaleEvent } from './gantt.interface';
 import 'dhtmlx-gantt';
 import { gantt } from 'dhtmlx-gantt';
 import { TranslateService } from '@ngx-translate/core';
@@ -23,7 +23,7 @@ const hourRangeFormat = (step) => {
 @Component({
   selector: 'app-gantt',
   templateUrl: './gantt.component.html',
-  styleUrls: ['./gantt.component.scss'],
+  styleUrls: ['./gantt.component.scss', './dhtmlgantx-material.css'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class GanttComponent implements AfterViewInit, OnChanges {
@@ -31,13 +31,18 @@ export class GanttComponent implements AfterViewInit, OnChanges {
   @Input() data: GanttData;
 
   @Output() dataUpdated: EventEmitter<GanttRow> = new EventEmitter<GanttRow>();
+  @Output() ganttScaleChanged: EventEmitter<GanttScaleEvent> =
+    new EventEmitter<GanttScaleEvent>();
+
 
   @ViewChild('gantt', { static: true }) ganttContainer: ElementRef;
 
   cachedSettings: any;
   zoom: boolean;
 
-  constructor(private translateService: TranslateService) { }
+  constructor(
+    private translateService: TranslateService
+  ) { }
 
   ngAfterViewInit(): void {
 
@@ -46,24 +51,7 @@ export class GanttComponent implements AfterViewInit, OnChanges {
       .subscribe((translations: { [key: string]: string }) => {
 
 
-        gantt.config.min_column_width = 80;
-
-
-        gantt.init(this.ganttContainer.nativeElement);
-
-        gantt.config.columns = [
-          { name: 'text', label: translations.TASK_NAME, width: '*', tree: true },
-          { name: 'start_date', label: translations.START_DATE, align: 'center' },
-          { name: 'duration', label: translations.DURATION, align: 'center' },
-
-        ];
-
-        if (this.data) {
-          gantt.parse(this.data);
-        }
-
-
-
+        this.initGant(translations);
         gantt.attachEvent('onAfterTaskDrag', (id, mode) => {
           const task = gantt.getTask(id);
 
@@ -80,9 +68,40 @@ export class GanttComponent implements AfterViewInit, OnChanges {
           this.dataUpdated.emit(row);
 
         }, null);
+
+        this.emitGanttScale();
+
+        gantt.attachEvent('onGanttRender', () => {
+          this.emitGanttScale();
+        }, null);
       });
 
+  }
 
+  private emitGanttScale() {
+    const ganttState = gantt.getState();
+    this.ganttScaleChanged.emit(
+      {
+        minDate: ganttState.min_date,
+        maxDate: ganttState.max_date
+      }
+    );
+  }
+
+  private initGant(translations: { [key: string]: string }) {
+    gantt.config.min_column_width = 80;
+    gantt.init(this.ganttContainer.nativeElement);
+
+    gantt.config.columns = [
+      { name: 'text', label: translations.TASK_NAME, width: '*', tree: true },
+      { name: 'start_date', label: translations.START_DATE, align: 'center' },
+      { name: 'duration', label: translations.DURATION, align: 'center' },
+
+    ];
+
+    if (this.data) {
+      gantt.parse(this.data);
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -90,7 +109,18 @@ export class GanttComponent implements AfterViewInit, OnChanges {
   }
 
 
-  zoomToFit() {
+  toggleZoomMode() {
+    this.zoom = !this.zoom;
+    if (this.zoom) {
+      this.saveConfig();
+      this.zoomToFit();
+    } else {
+      this.restoreConfig();
+      gantt.render();
+    }
+  }
+
+  private zoomToFit() {
     const project = gantt.getSubtaskDates();
     const areaWidth = (gantt as any).$task.offsetWidth;
     let i;
@@ -116,7 +146,7 @@ export class GanttComponent implements AfterViewInit, OnChanges {
     gantt.render();
   }
 
-  applyConfig(config, dates) {
+  private applyConfig(config, dates) {
 
     gantt.config.scales = config.scales;
 
@@ -129,18 +159,8 @@ export class GanttComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  toggleZoomMode() {
-    this.zoom = !this.zoom;
-    if (this.zoom) {
-      this.saveConfig();
-      this.zoomToFit();
-    } else {
-      this.restoreConfig();
-      gantt.render();
-    }
-  }
 
-  saveConfig() {
+  private saveConfig() {
     const config = gantt.config;
     this.cachedSettings = {};
     this.cachedSettings.scales = config.scales;
@@ -148,7 +168,7 @@ export class GanttComponent implements AfterViewInit, OnChanges {
     this.cachedSettings.end_date = config.end_date;
   }
 
-  restoreConfig() {
+  private restoreConfig() {
     this.applyConfig(this.cachedSettings, null);
   }
 
